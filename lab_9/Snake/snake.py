@@ -1,188 +1,197 @@
-import pygame 
-import random 
-import sys 
- 
-BLACK = (0, 0, 0) 
-LINE_COLOR = (50, 50, 50) 
-HEIGHT = 400 
-WIDTH = 400 
- 
-BLOCK_SIZE = 20 
- 
-class Point: 
-    def __init__(self, _x, _y): 
-        self.x = _x 
-        self.y = _y 
- 
-class Food: 
-    def __init__(self): 
-        self.location = Point(4, 10) 
- 
-    def draw(self): 
-        point = self.location 
-        rect = pygame.Rect(BLOCK_SIZE * point.x, BLOCK_SIZE * point.y, BLOCK_SIZE, BLOCK_SIZE) 
-        pygame.draw.rect(SCREEN, (0, 255, 0), rect) 
- 
-class Wall: 
-    def __init__(self): 
-        self.wall2 =[] 
-        self.lvl = [1,2,3,4,5] 
-        self.level = 1 
-        self.speed = 5 
- 
-    def levels(self): 
-        f = open("level{}.txt".format(self.level), "r") 
-        for y in range(0,(HEIGHT//BLOCK_SIZE)+1): 
-            for x in range(0,(WIDTH//BLOCK_SIZE)+1): 
-                if f.read(1) == "#": 
-                    self.wall2.append(Point(x,y)) 
- 
-    #     print(self.level) 
-    def update(self, snake) : 
-         
-        if  snake.num %4 == 0 and snake.num >= 4: 
-            self.wall2.clear() 
-            f = open("level{}.txt".format(self.level), "r") 
-            #SCREEN.fill(BLACK) 
-         
- 
-            self.level = self.lvl[self.level+1]-1 
-            self.speed+=1 
-            self.wall2.clear() 
-            for y in range(0,(HEIGHT//BLOCK_SIZE)+1): 
-                for x in range(0,(WIDTH//BLOCK_SIZE)+1): 
-                    if f.read(1) == "#": 
-                        self.wall2.append(Point(x,y)) 
-     
- 
- 
- 
-    def draw(self): 
-        for point in self.wall2: 
-            rect = pygame.Rect(BLOCK_SIZE * point.x, BLOCK_SIZE * point.y, BLOCK_SIZE, BLOCK_SIZE) 
-            pygame.draw.rect(SCREEN, (226,135,67), rect) 
-     
- 
- 
-class Snake: 
-    def __init__(self): 
-        self.body = [Point(10, 12)] 
-        #self.level = 1 
-        self.dx = 0 
-        self.dy = 0 
-        self.num = 0 
-        self.kx = 0 
-        self.ky = 0 
- 
-    def move(self):     
-        for i in range(len(self.body) - 1, 0, -1): 
-            self.body[i].x = self.body[i-1].x 
-            self.body[i].y = self.body[i-1].y 
- 
-        self.body[0].x += self.dx  
-        self.body[0].y += self.dy  
-     
-        if self.body[0].x * BLOCK_SIZE > WIDTH: 
-            self.body[0].x = 0 
-         
-        if self.body[0].y * BLOCK_SIZE > HEIGHT: 
-            self.body[0].y = 0 
-     
-        if self.body[0].x < 0: 
-            self.body[0].x = WIDTH / BLOCK_SIZE 
-         
-        if self.body[0].y < 0: 
-            self.body[0].y = HEIGHT / BLOCK_SIZE 
-     
-    def draw(self): 
-        point = self.body[0] 
-        rect = pygame.Rect(BLOCK_SIZE * point.x, BLOCK_SIZE * point.y, BLOCK_SIZE, BLOCK_SIZE) 
-        pygame.draw.rect(SCREEN, (255, 0, 0), rect) 
- 
- 
-        for point in self.body[1:]: 
-            rect = pygame.Rect(BLOCK_SIZE * point.x, BLOCK_SIZE * point.y, BLOCK_SIZE, BLOCK_SIZE) 
-            pygame.draw.rect(SCREEN, (0, 255, 0), rect) 
- 
-    def check_collision(self, food,wall): 
-        if self.body[0].x == food.location.x: 
-            if self.body[0].y == food.location.y: 
-                self.body.append(Point(food.location.x, food.location.y)) 
-                self.kx = random.randint(1,19) 
-                self.ky = random.randint(1,19) 
-                food.location = Point(self.kx,self.ky) 
-                self.num+=1 
-                wall.update(self) 
-         
-         
- 
-        for i in wall.wall2: 
-            if self.body[0].x == i.x: 
-                if self.body[0].y == i.y: 
-                    pygame.quit() 
-                    sys.exit() 
-        for i in wall.wall2: 
-            if i.x == self.kx: 
-                if i.y == self.ky: 
-                    self.kx = random.randint(1,19) 
-                    self.ky = random.randint(1,19) 
-                    food.location = Point(self.kx,self.ky) 
-         
-def main(): 
-    global SCREEN, CLOCK 
-    pygame.init() 
-    SCREEN = pygame.display.set_mode((WIDTH, HEIGHT)) 
-    CLOCK = pygame.time.Clock() 
-    SCREEN.fill(BLACK) 
-    font = pygame.font.SysFont("comicsansms", 20) 
-    food_font = pygame.font.SysFont("comicsansms", 20) 
-    snake = Snake() 
-    food = Food() 
-    wall = Wall() 
-    while True: 
-        for event in pygame.event.get(): 
-            if event.type == pygame.QUIT: 
-                pygame.quit() 
-            if event.type == pygame.KEYDOWN: 
-                if event.key == pygame.K_RIGHT: 
-                    snake.dx = 1 
-                    snake.dy = 0 
-                if event.key == pygame.K_LEFT: 
-                    snake.dx = -1 
-                    snake.dy = 0 
-                if event.key == pygame.K_UP: 
-                    snake.dx = 0 
-                    snake.dy = -1 
-                if event.key == pygame.K_DOWN: 
-                    snake.dx = 0 
-                    snake.dy = 1 
-                 
-        score = font.render("score food "+str(snake.num), True, (0, 128, 0)) 
-        score_f = food_font.render("score level "+str(wall.level),True,(0,128,0)) 
-        snake.move() 
- 
-        snake.check_collision(food,wall) 
-        wall.levels()     
- 
-        SCREEN.fill(BLACK) 
-         
-         
-        snake.draw() 
-        food.draw() 
-        wall.draw() 
-         
-        drawGrid() 
-        SCREEN.blit(score_f,(WIDTH-score_f.get_width()-20,0)) 
-        SCREEN.blit(score,(WIDTH-score.get_width()-20,25)) 
-        pygame.display.update() 
-        CLOCK.tick(wall.speed) 
- 
- 
-def drawGrid(): 
-    for x in range(0, WIDTH, BLOCK_SIZE): 
-        for y in range(0, HEIGHT, BLOCK_SIZE): 
-            rect = pygame.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE) 
-            pygame.draw.rect(SCREEN, LINE_COLOR, rect, 1) 
- 
- 
+import pygame
+import random
+import time, datetime
+
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+
+xx = 20
+yy = 770
+zz = 570
+
+def wall_dr():
+    for i in range(80):
+        pygame.draw.rect(screen, (0, 0, 255), (i*10, 0*10, 10, 10))
+        pygame.draw.rect(screen, (0, 0, 255), (i*10, 59*10, 10, 10))
+    for i in range(60):
+        pygame.draw.rect(screen, (0, 0, 255), (0*10, i*10, 10, 10))
+        pygame.draw.rect(screen, (0, 0, 255), (79*10, i*10, 10, 10))
+    
+
+class Food:
+    def __init__(self, color, time, size):
+        self.x = random.randint(10, yy)
+        self.y = random.randint(10, zz)
+        self.type = color
+        self.time = time
+        self.st_time = datetime.datetime.now()
+        self.size = size
+
+    def get(self, snake):
+        self.x = random.randint(10, yy)
+        self.y = random.randint(10, zz)
+        while([self.x, self.y] in snake.elements):
+            self.x = random.randint(10, yy)
+            self.y = random.randint(10, zz)
+        self.st_time = datetime.datetime.now()
+        #print(self.st_time.second)
+
+    def draw(self, snake):
+        if self.time < (datetime.datetime.now() - self.st_time).seconds:
+            self.get(snake)
+        pygame.draw.rect(screen, self.type, (self.x, self.y, 20, 20))
+
+class Snakee:
+    def __init__(self):
+        self.size = 1
+        self.elements = [[400, 300]]
+        self.dx = 0
+        self.dy = 1
+        self.is_add = 0
+        self.speed = 20
+        self.color = GREEN
+        self.radius = 20
+
+    def draw(self):
+        for element in self.elements:
+            pygame.draw.rect(screen, self.color, (element[0], element[1], self.radius, self.radius))
+
+    def eat(self, foodx, foody):
+        x = self.elements[0][0]
+        y = self.elements[0][1]
+
+        if foodx-10 <= x <= foodx + 10 and foody -10 <= y <= foody + 10:
+            #if(foodx == x and foody == y):
+            return True
+        return False
+
+    def add_to_snake(self):
+        while(self.is_add != 0):    
+            self.size += 1
+            #self.elements.append([0, 0])
+            self.elements.insert(0, [self.elements[0][0] + self.dx*10, self.elements[0][1] + self.dy*10])
+            self.is_add -= 1
+        if not self.size % 7:
+            self.speed += 5
+
+    def lose(self):
+        for i in range(1, self.size - 1):
+            if self.elements[0][0] == self.elements[i][0] and self.elements[0][1] == self.elements[i][1]:
+                return True
+        if 10 >= self.elements[0][0] or 10 >= self.elements[0][1] or yy <= self.elements[0][0] or zz <= self.elements[0][1]:
+            return True
+
+        return False
+
+    def move(self):
+        if self.is_add:
+            self.add_to_snake()
+        self.elements.insert(0, [self.elements[0][0] + self.dx*10, self.elements[0][1] + self.dy*10])
+        self.elements.pop(-1)
+
+def move(ls):
+    return ls[random.randint(0, 1)]
+
+def game():
+    font_small = pygame.font.SysFont("Verdana", 20)
+    snake = Snakee()
+    foodx = [Food(RED, 5, 1), Food(BLUE, 3, 3)]
+    food = move(foodx)
+    FPS = pygame.time.Clock()
+    running = True
+
+    while running:
+        if snake.lose():
+            time.sleep(1)
+            running = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                if event.key == pygame.K_UP and snake.dy != 1:
+                    snake.dx = 0
+                    snake.dy = -1
+                elif event.key == pygame.K_DOWN and snake.dy != -1:
+                    snake.dx = 0
+                    snake.dy = 1
+                elif event.key == pygame.K_RIGHT and snake.dx != -1:
+                    snake.dx = 1
+                    snake.dy = 0
+                elif event.key == pygame.K_LEFT and snake.dx != 1:
+                    snake.dx = -1
+                    snake.dy = 0
+
+        snake.move()
+        if snake.eat(food.x, food.y):
+            snake.is_add = food.size
+            food = move(foodx)
+            food.get(snake)
+
+        screen.fill(BLACK)
+        snake.draw()
+        food.draw(snake)
+        wall_dr()
+
+        if snake.lose():
+            time.sleep(1)
+            running = False
+
+        sc = font_small.render('Score: ' + str(snake.size), True, WHITE)
+        screen.blit(sc, (680, 15))
+        lv = snake.size // 4 + 1
+        lvls = font_small.render(f'Lvl: {lv}', True, WHITE)
+        screen.blit(lvls, (680, 35))
+
+        pygame.display.flip()
+
+        FPS.tick(snake.speed)
+    return (False, snake.size)
+
+
+def main():
+    running = True
+    start = False
+    font = pygame.font.SysFont("Verdana", 60)
+    font2 = pygame.font.SysFont("Verdana", 40)
+    #snake = Snakee()
+    cnt = 0
+    maxx = 0
+    while running:
+        screen.fill((23, 45, 155))
+        pos = pygame.mouse.get_pos()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if 300 <= pos[0] <= 500 and 400 <= pos[1] <= 500:
+                    start = True
+
+        pygame.draw.rect(screen, WHITE, (300, 400, 200, 100))
+        st_but = font.render("START", True, BLACK)
+        screen.blit(st_but, (305, 410))
+
+        maxi = font2.render(f'Maximum score: {maxx}', True, WHITE)
+        screen.blit(maxi, (310, 540))
+        if start:
+            start, score = game()
+            maxx = max(maxx, score)
+            #cnt += 1
+            '''
+            snake.cleaning()
+            snake.elements = [[400, 300]]
+            snake.speed = 20
+            snake.size = 1
+            #del snake
+            '''
+        pygame.display.flip()
+    pygame.quit()
+
 main()
