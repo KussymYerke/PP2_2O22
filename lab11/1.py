@@ -4,8 +4,9 @@ import re
 
 conn = psycopg2.connect(
     host = 'localhost',
-    database = 'pp_db',
-    user = 'pp_user',
+    database = 'phonebook',
+    user = 'postgres',
+    password = '123'
 )
 running  = True
 print('PhoneBook --------------------------------------------------')
